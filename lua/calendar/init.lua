@@ -8,7 +8,7 @@ local Win
 local augroup = vim.api.nvim_create_augroup("calendar", { clear = true })
 
 local main = function()
-    dates.show_date()
+    print("work on calendar")
     return 5
 end
 
