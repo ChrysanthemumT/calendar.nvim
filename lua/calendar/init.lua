@@ -1,13 +1,14 @@
 local M = {}
 
 local popup = require("plenary.popup")
+local dates = require("calendar.dates")
 
 local Win_id
-
+local Win
 local augroup = vim.api.nvim_create_augroup("calendar", { clear = true })
 
 local main = function()
-    print("work on calendar!!")
+    dates.show_date()
     return 5
 end
 
@@ -27,7 +28,7 @@ local ShowMenu = function(opts, cb)
     local height = math.floor(vim.api.nvim_win_get_height(parent_win) * 0.9)
     local borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
 
-    Win_id = popup.create(opts, {
+    Win_id, Win = popup.create(opts, {
         title = "Calendar",
         highlight = "CalendarHighlight",
         line = math.floor(((vim.o.lines - height) / 2) - 1),
@@ -37,7 +38,17 @@ local ShowMenu = function(opts, cb)
         borderchars = borderchars,
         callback = cb,
     })
+
     local bufnr = vim.api.nvim_win_get_buf(Win_id)
+
+    vim.api.nvim_win_set_option(
+        Win.border.win_id,
+        "winhl",
+        "Normal:CalendarBorder"
+    )
+
+    dates.show(bufnr)
+    vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
     vim.api.nvim_buf_set_keymap(bufnr, "n", "q", "<cmd>lua CloseMenu()<CR>", {
         silent = false })
 end
