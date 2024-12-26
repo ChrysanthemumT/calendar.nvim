@@ -8,6 +8,11 @@ vim.cmd([[
 local MONTHS = { "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" }
 
+local state = {
+    current_day = {},
+    current_month = {},
+}
+
 local get_calendar_data = function()
     local current_date = os.date("*t")
     local first_day = os.time({
@@ -34,7 +39,7 @@ end
 local function create_day_box(day, is_current)
     return {
         "┌───────────────┐",
-        string.format("│      %2d       │", day),
+        string.format("│             %2d│", day),
         "│               │",
         "│               │",
         "│               │",
@@ -122,7 +127,10 @@ end
 M.set_date = function(bufnr)
     local lines = {}
     local cal = get_calendar_data()
-    table.insert(lines, string.format("%s %d", MONTHS[cal.month], cal.year))
+    local date = string.format("%s %d", MONTHS[cal.month], cal.year)
+    local width = (vim.o.columns - #date) / 2
+    local padding = string.rep(" ", width)
+    table.insert(lines, padding .. date)
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 end
 
