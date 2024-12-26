@@ -1,5 +1,12 @@
---TODO add dates
 local M = {}
+
+vim.cmd([[
+  highlight default CurrentDay guibg=#3d59a1 guifg=#ffffff gui=bold
+  highlight default MyHighlight guibg=#98FB98 guifg=#ffffff gui=bold
+]])
+
+local MONTHS = { "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December" }
 
 local get_calendar_data = function()
     local current_date = os.date("*t")
@@ -24,49 +31,108 @@ local get_calendar_data = function()
     }
 end
 
+local function create_day_box(day, is_current)
+    return {
+        "┌───────────────┐",
+        string.format("│      %2d       │", day),
+        "│               │",
+        "│               │",
+        "│               │",
+        "└───────────────┘"
+    }
+end
+
 M.show = function(bufnr)
     local cal = get_calendar_data()
     local lines = {}
     local highlights = {}
-    local month_names = { "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December" }
+    local ns_id = vim.api.nvim_create_namespace('calendar_highlights')
 
-    table.insert(lines, string.format("%s %d", month_names[cal.month], cal.year))
-    table.insert(lines, "Su Mo Tu We Th Fr Sa")
+    -- Add header
+    --table.insert(lines, string.format("%s %d", MONTHS[cal.month], cal.year))
+    --table.insert(lines, "")
 
-    local current_line = ""
-    local current_pos = 2
-    local col_start = 0
+    -- Build calendar grid
+    local box_height = 6
+    local current_week = {}
 
+    for i = 1, box_height do
+        current_week[i] = ""
+    end
+
+    -- Add initial padding
     for i = 1, cal.first_wday - 1 do
-        current_line = current_line .. "   "
-        col_start = col_start + 3
+        local empty_box = create_day_box("  ", false)
+        for j = 1, box_height do
+            current_week[j] = current_week[j] .. empty_box[j]
+        end
     end
 
+    -- Add days
     for i = 1, cal.days do
-        if i == cal.day then
-            vim.schedule(function()
-                vim.api.nvim_buf_add_highlight(bufnr, 0, "CurrentDay", current_pos,
-                    col_start, col_start + 2)
-            end)
+        local day_box = create_day_box(i, i == cal.day)
+
+        if i == 1 then
+            for line_offset = 1, 4 do
+                table.insert(highlights, {
+                    line = #lines + line_offset,    -- +2 for header lines
+                    col_start = #current_week[1],
+                    col_end = #current_week[1] + 12 -- Box width
+                })
+            end
         end
-        current_line = current_line .. string.format("%2d ", i)
-        col_start = col_start + 3
-        if (i + cal.first_wday - 1) % 7 == 0 or i == cal.days then
-            table.insert(lines, current_line)
-            current_line = ""
-            current_pos = current_pos + 1
-            col_start = 0
+
+        for j = 1, box_height do
+            current_week[j] = current_week[j] .. day_box[j]
+        end
+
+        if (i + cal.first_wday - 1) % 7 == 0 then
+            for j = 1, box_height do
+                table.insert(lines, current_week[j])
+            end
+            current_week = {}
+            for j = 1, box_height do
+                current_week[j] = ""
+            end
         end
     end
 
+    -- Add remaining days
+    if current_week[1] ~= "" then
+        for j = 1, box_height do
+            table.insert(lines, current_week[j])
+        end
+    end
+
+    -- Set buffer content and highlights
+    vim.api.nvim_buf_set_option(bufnr, 'modifiable', true)
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+
+    -- Apply highlights
+    vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
+    --[[for _, hl in ipairs(highlights) do
+        vim.api.nvim_buf_add_highlight(bufnr, ns_id, 'CurrentDay',
+            hl.line, hl.col_start, hl.col_end)
+        print(vim.inspect({ hl.line, hl.col_start, hl.col_end }))
+    end
+    --]]
+    vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
+end
+
+M.set_date = function(bufnr)
+    local lines = {}
+    local cal = get_calendar_data()
+    table.insert(lines, string.format("%s %d", MONTHS[cal.month], cal.year))
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
 end
 
-M.show_date = function()
-    get_calendar_data()
+-- Optional: Add navigation methods
+function M.next_month()
+    -- Implementation for moving to next month
 end
 
---vim.cmd [[highlight CurrentDay guibg=#3d59a1 guifg=#ffffff gui=bold]]
+function M.prev_month()
+    -- Implementation for moving to previous month
+end
 
 return M
