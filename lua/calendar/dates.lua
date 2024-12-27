@@ -1,5 +1,6 @@
-local components = require("calendar.ui_components")
 local M = {}
+require("calendar.state")
+local components = require("calendar.ui_components")
 
 vim.cmd([[
   highlight default CurrentDay guibg=#3d59a1 guifg=#ffffff gui=bold
@@ -9,44 +10,34 @@ vim.cmd([[
 local MONTHS = { "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" }
 
-local state = {
-    current_day = {},
-    current_month = {},
-}
-
-local get_calendar_data = function()
-    local current_date = os.date("*t")
+local calculate_month_data = function(state)
     local first_day = os.time({
-        year = current_date.year,
-        month = current_date.month,
+        year = state:get_state().year,
+        month = state:get_state().month,
         day = 1
     })
     local first_wday = os.date("*t", first_day).wday
     local days_in_month = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
-    if current_date.year % 4 == 0 and (current_date.year % 100 ~= 0 or current_date % 400 == 0) then
+    if state:get_state().year % 4 == 0 and (state:get_state().year % 100 ~= 0 or state:get_state().year % 400 == 0) then
         days_in_month[2] = 29
     end
 
     return {
-        year = current_date.year,
-        month = current_date.month,
-        day = current_date.day,
+        year = state:get_state().year,
+        month = state:get_state().month,
+        day = state:get_state().day,
         first_wday = first_wday,
-        days = days_in_month[current_date.month]
+        days = days_in_month[state:get_state().month]
     }
 end
 
 
-M.show = function(bufnr)
-    local cal = get_calendar_data()
+M.render_view = function(bufnr, state)
+    local cal = calculate_month_data(state)
     local lines = {}
     local highlights = {}
     local ns_id = vim.api.nvim_create_namespace('calendar_highlights')
-
-    -- Add header
-    --table.insert(lines, string.format("%s %d", MONTHS[cal.month], cal.year))
-    --table.insert(lines, "")
 
     -- Build calendar grid
     local box_height = 5
@@ -119,9 +110,9 @@ M.show = function(bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end
 
-M.set_date = function(bufnr)
+M.set_date = function(bufnr, state)
     local lines = {}
-    local cal = get_calendar_data()
+    local cal = calculate_month_data(state)
     local date = string.format("%s %d", MONTHS[cal.month], cal.year)
     local width = (vim.o.columns - #date) / 2
     local padding = string.rep(" ", width)

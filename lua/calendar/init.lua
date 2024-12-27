@@ -1,14 +1,11 @@
 local M = {}
 
 -- States
-local dates = require("calendar.dates")
+local month_view = require("calendar.dates")
+local CalendarState = require("calendar.state").CalendarState
+local state = CalendarState.new()
+
 local Win_id, Title_id, Background_id
-local view_date = {
-    day = nil,
-    week = nil,
-    month = nil,
-    year = nil,
-}
 
 vim.cmd([[
     highlight default Cursor guifg=NONE guibg=NONE blend=100
@@ -16,7 +13,6 @@ vim.cmd([[
 
 local main = function()
     print("work on calendar")
-    return 5
 end
 
 M.setup = function()
@@ -40,7 +36,7 @@ CloseMenu = function()
     end
 end
 
-local ShowMenu = function(cb)
+local ShowMenu = function()
     local width = vim.o.columns
     local height = vim.o.lines
 
@@ -106,11 +102,28 @@ local ShowMenu = function(cb)
         "Normal:CalendarBorder"
     )
 
-    vim.api.nvim_win_set_option(Win_id, "guicursor", "a:Cursor")
     vim.api.nvim_buf_set_keymap(body_buf, "n", "q", "<cmd>lua CloseMenu()<CR>", {
         silent = false })
-    dates.show(body_buf)
-    dates.set_date(title_buf)
+    vim.keymap.set("n", "n",
+        function()
+            state:next_month()
+            month_view.render_view(body_buf, state)
+            month_view.set_date(title_buf, state)
+        end, {
+            buffer = body_buf
+        })
+
+    vim.keymap.set("n", "p",
+        function()
+            state:prev_month()
+            month_view.render_view(body_buf, state)
+            month_view.set_date(title_buf, state)
+        end, {
+            buffer = body_buf
+        })
+
+    month_view.render_view(body_buf, state)
+    month_view.set_date(title_buf, state)
 
     vim.api.nvim_create_autocmd("BufLeave", {
         buffer = body_buf,
@@ -123,17 +136,9 @@ local ShowMenu = function(cb)
     vim.api.nvim_buf_set_option(body_buf, 'modifiable', false)
 end
 
-M.toggle_on = function()
-    local cb = function(_, sel)
-        print("works!")
-    end
-    ShowMenu(cb)
-end
-
 M.render = function()
-
+    state:reset_view()
+    ShowMenu()
 end
-
-M.render()
 
 return M
