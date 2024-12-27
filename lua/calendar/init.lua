@@ -1,9 +1,14 @@
 local M = {}
 
+-- States
 local dates = require("calendar.dates")
-
 local Win_id, Title_id, Background_id
-local augroup = vim.api.nvim_create_augroup("calendar", { clear = true })
+local view_date = {
+    day = nil,
+    week = nil,
+    month = nil,
+    year = nil,
+}
 
 vim.cmd([[
     highlight default Cursor guifg=NONE guibg=NONE blend=100
@@ -111,6 +116,10 @@ local ShowMenu = function(cb)
         buffer = body_buf,
         callback = CloseMenu
     })
+    vim.api.nvim_create_autocmd("VimResized", {
+        callback = function()
+        end
+    })
     vim.api.nvim_buf_set_option(body_buf, 'modifiable', false)
 end
 
@@ -120,5 +129,11 @@ M.toggle_on = function()
     end
     ShowMenu(cb)
 end
+
+M.render = function()
+
+end
+
+M.render()
 
 return M

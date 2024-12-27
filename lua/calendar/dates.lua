@@ -1,3 +1,4 @@
+local components = require("calendar.ui_components")
 local M = {}
 
 vim.cmd([[
@@ -36,16 +37,6 @@ local get_calendar_data = function()
     }
 end
 
-local function create_day_box(day, is_current)
-    return {
-        "┌───────────────┐",
-        string.format("│             %2d│", day),
-        "│               │",
-        "│               │",
-        "│               │",
-        "└───────────────┘"
-    }
-end
 
 M.show = function(bufnr)
     local cal = get_calendar_data()
@@ -58,8 +49,12 @@ M.show = function(bufnr)
     --table.insert(lines, "")
 
     -- Build calendar grid
-    local box_height = 6
+    local box_height = 5
     local current_week = {}
+
+    for i = 1, 3 do
+        table.insert(lines, components.create_week_label()[i]);
+    end
 
     for i = 1, box_height do
         current_week[i] = ""
@@ -67,7 +62,7 @@ M.show = function(bufnr)
 
     -- Add initial padding
     for i = 1, cal.first_wday - 1 do
-        local empty_box = create_day_box("  ", false)
+        local empty_box = components.create_day_box("  ")
         for j = 1, box_height do
             current_week[j] = current_week[j] .. empty_box[j]
         end
@@ -75,7 +70,7 @@ M.show = function(bufnr)
 
     -- Add days
     for i = 1, cal.days do
-        local day_box = create_day_box(i, i == cal.day)
+        local day_box = components.create_day_box(i)
 
         if i == 1 then
             for line_offset = 1, 4 do
