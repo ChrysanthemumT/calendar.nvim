@@ -9,6 +9,7 @@ vim.cmd([[
 
 local MONTHS = { "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December" }
+local days_in_month = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
 local calculate_month_data = function(state)
     local first_day = os.time({
@@ -16,8 +17,13 @@ local calculate_month_data = function(state)
         month = state:get_state().month,
         day = 1
     })
+    local last_day = os.time({
+        year = state:get_state().year,
+        month = state:get_state().month,
+        day = days_in_month[state:get_state().month]
+    })
     local first_wday = os.date("*t", first_day).wday
-    local days_in_month = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+    local last_wday = os.date("*t", last_day).wday
 
     if state:get_state().year % 4 == 0 and (state:get_state().year % 100 ~= 0 or state:get_state().year % 400 == 0) then
         days_in_month[2] = 29
@@ -28,6 +34,7 @@ local calculate_month_data = function(state)
         month = state:get_state().month,
         day = state:get_state().day,
         first_wday = first_wday,
+        last_wday = last_wday,
         days = days_in_month[state:get_state().month]
     }
 end
@@ -85,6 +92,15 @@ M.render_view = function(bufnr, state)
             for j = 1, box_height do
                 current_week[j] = ""
             end
+        end
+    end
+
+
+    -- Add remaining  padding
+    for i = 1, (7 - cal.last_wday) do
+        local empty_box = components.create_day_box("  ")
+        for j = 1, box_height do
+            current_week[j] = current_week[j] .. empty_box[j]
         end
     end
 

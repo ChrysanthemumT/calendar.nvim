@@ -23,7 +23,7 @@ end
 M.create_week_label = function()
     return {
         "┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐┌───────────────┐",
-        "│     Monday    ││    Tuesday    ││   Wednesday   ││    Thursday   ││     Friday    ││    Saturday   ││     Sunday    │",
+        "│     Sunday    ││     Monday    ││    Tuesday    ││    Wednesday  ││    Thursday   ││     Friday    ││    Saturday   │",
         "└───────────────┘└───────────────┘└───────────────┘└───────────────┘└───────────────┘└───────────────┘└───────────────┘",
     }
 end
