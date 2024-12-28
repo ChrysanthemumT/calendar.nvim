@@ -13,29 +13,29 @@ local days_in_month = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 
 local calculate_month_data = function(state)
     local first_day = os.time({
-        year = state:get_state().year,
-        month = state:get_state().month,
+        year = state:get_view().year,
+        month = state:get_view().month,
         day = 1
     })
     local last_day = os.time({
-        year = state:get_state().year,
-        month = state:get_state().month,
-        day = days_in_month[state:get_state().month]
+        year = state:get_view().year,
+        month = state:get_view().month,
+        day = days_in_month[state:get_view().month]
     })
     local first_wday = os.date("*t", first_day).wday
     local last_wday = os.date("*t", last_day).wday
 
-    if state:get_state().year % 4 == 0 and (state:get_state().year % 100 ~= 0 or state:get_state().year % 400 == 0) then
+    if state:get_view().year % 4 == 0 and (state:get_view().year % 100 ~= 0 or state:get_view().year % 400 == 0) then
         days_in_month[2] = 29
     end
 
     return {
-        year = state:get_state().year,
-        month = state:get_state().month,
-        day = state:get_state().day,
+        year = state:get_view().year,
+        month = state:get_view().month,
+        day = state:get_view().day,
         first_wday = first_wday,
         last_wday = last_wday,
-        days = days_in_month[state:get_state().month]
+        days = days_in_month[state:get_view().month]
     }
 end
 
@@ -47,8 +47,9 @@ M.render_view = function(bufnr, state)
     local ns_id = vim.api.nvim_create_namespace('calendar_highlights')
 
     -- Build calendar grid
-    local box_height = 5
+    local box_height = 4
     local current_week = {}
+    local current_wday = 0
 
     for i = 1, 3 do
         table.insert(lines, components.create_week_label()[i]);
@@ -64,18 +65,22 @@ M.render_view = function(bufnr, state)
         for j = 1, box_height do
             current_week[j] = current_week[j] .. empty_box[j]
         end
+        current_wday = current_wday + 1
+        current_wday = current_wday % 7
     end
+
+    local hightlight_value = { 12 }
 
     -- Add days
     for i = 1, cal.days do
         local day_box = components.create_day_box(i)
 
-        if i == 1 then
-            for line_offset = 1, 4 do
+        if i == state:get_state().day and cal.month == state:get_state().month then
+            for line_offset = 1, 2 do
                 table.insert(highlights, {
-                    line = #lines + line_offset,    -- +2 for header lines
-                    col_start = #current_week[1],
-                    col_end = #current_week[1] + 12 -- Box width
+                    line = #lines + line_offset,
+                    col_start = current_wday * 21 + 3,
+                    col_end = current_wday * 21 + 18
                 })
             end
         end
@@ -93,6 +98,9 @@ M.render_view = function(bufnr, state)
                 current_week[j] = ""
             end
         end
+
+        current_wday = current_wday + 1
+        current_wday = current_wday % 7
     end
 
 
@@ -117,12 +125,11 @@ M.render_view = function(bufnr, state)
 
     -- Apply highlights
     vim.api.nvim_buf_clear_namespace(bufnr, ns_id, 0, -1)
-    --[[for _, hl in ipairs(highlights) do
+    for _, hl in ipairs(highlights) do
         vim.api.nvim_buf_add_highlight(bufnr, ns_id, 'CurrentDay',
             hl.line, hl.col_start, hl.col_end)
         print(vim.inspect({ hl.line, hl.col_start, hl.col_end }))
     end
-    --]]
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end
 

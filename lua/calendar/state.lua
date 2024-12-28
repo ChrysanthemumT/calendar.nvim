@@ -51,8 +51,12 @@ function CalendarState:reset_view()
     self.view.yday = self.state.yday
 end
 
-function CalendarState:get_state()
+function CalendarState:get_view()
     return self.view
+end
+
+function CalendarState:get_state()
+    return self.state
 end
 
 M.CalendarState = CalendarState
