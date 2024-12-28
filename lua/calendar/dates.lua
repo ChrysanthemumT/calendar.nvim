@@ -69,8 +69,6 @@ M.render_view = function(bufnr, state)
         current_wday = current_wday % 7
     end
 
-    local hightlight_value = { 12 }
-
     -- Add days
     for i = 1, cal.days do
         local day_box = components.create_day_box(i)
@@ -128,7 +126,7 @@ M.render_view = function(bufnr, state)
     for _, hl in ipairs(highlights) do
         vim.api.nvim_buf_add_highlight(bufnr, ns_id, 'CurrentDay',
             hl.line, hl.col_start, hl.col_end)
-        print(vim.inspect({ hl.line, hl.col_start, hl.col_end }))
+        --print(vim.inspect({ hl.line, hl.col_start, hl.col_end }))
     end
     vim.api.nvim_buf_set_option(bufnr, 'modifiable', false)
 end

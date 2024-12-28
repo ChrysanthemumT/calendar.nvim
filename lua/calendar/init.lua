@@ -122,6 +122,15 @@ local ShowMenu = function()
             buffer = body_buf
         })
 
+    vim.keymap.set("n", "<leader><leader>",
+        function()
+            state:reset_view()
+            month_view.render_view(body_buf, state)
+            month_view.set_date(title_buf, state)
+        end, {
+            buffer = body_buf
+        })
+
     month_view.render_view(body_buf, state)
     month_view.set_date(title_buf, state)
 
@@ -134,6 +143,7 @@ local ShowMenu = function()
         end
     })
     vim.api.nvim_buf_set_option(body_buf, 'modifiable', false)
+    vim.api.nvim_win_set_option(Win_id, 'guicursor', 'a:None')
 end
 
 M.render = function()
